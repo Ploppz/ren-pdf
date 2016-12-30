@@ -1,0 +1,10 @@
+[package]
+name = "renpdf"
+version = "0.1.0"
+authors = ["Erlend Hofstad Langseth <3rlendhl@gmail.com>"]
+
+[dependencies]
+pdf = { path = "../pdf"}
+rusttype = "0.2.1"
+glium = "0.15.0"
+cgmath = "0.12.0"
