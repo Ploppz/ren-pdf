@@ -5,6 +5,7 @@ use glium::texture::RawImage2d;
 use rusttype::gpu_cache::Cache;
 use rusttype::{FontCollection, Scale, Point, PositionedGlyph};
 use glium::draw_parameters::{DrawParameters, Blend};
+use vec::Vec2;
 
 // Current strategy:
 // every frame clear buffers and draw/upload everything again.
@@ -15,6 +16,9 @@ pub struct FontRen<'a> {
     // Font/glyph management
     cache: Cache,
     fonts: FontCollection<'a>,
+
+    // Pen position
+    pen: Vec2,
 
     // OpenGL
     geometry: Vec<Vertex>,
@@ -38,6 +42,8 @@ impl<'a> FontRen<'a> {
         FontRen {
             cache: Cache::new(CACHE_SIZE, CACHE_SIZE, 0.2, 1.0),
             fonts: fonts,
+
+            pen: Vec2::null_vec(),
 
             geometry: Vec::new(),
             display: display.clone(),

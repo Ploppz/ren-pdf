@@ -1,17 +1,22 @@
 extern crate rusttype;
 #[macro_use]
 extern crate glium;
+#[macro_use]
+extern crate error_chain;
 extern crate cgmath;
 extern crate pdf;
 
 pub mod graphics;
 pub mod vec;
+pub mod err;
 
-use pdf::reader::PdfReader;
+use pdf::doc::Document;
 use graphics::PdfRenderer;
 use glium::{DisplayBuild, glutin};
 use glium::glutin::{Event, MouseButton, ElementState, MouseScrollDelta};
 use vec::Vec2;
+use err::*;
+
 
 const PATH: &'static str = "example.pdf";
 
@@ -21,7 +26,7 @@ const PATH: &'static str = "example.pdf";
 
 fn main() {
     let mut program = Program::new();
-    program.run();
+    program.run().unwrap_or_else(|e| print_err(e));
 }
 
 
@@ -44,13 +49,14 @@ impl Program {
             mouse_pos_past: Vec2::null_vec(),
         }
     }
-    pub fn run(&mut self) {
+    pub fn run(&mut self) -> Result<()> {
         let display = glutin::WindowBuilder::new().build_glium().unwrap();
-        let mut renderer = PdfRenderer::new(display.clone(), PdfReader::new(PATH).unwrap());
+        let doc = Document::from_path(PATH)?;
+        let mut renderer = PdfRenderer::new(display.clone(), &doc)?;
         loop {
             for ev in display.poll_events() {
                 match ev {
-                    Event::Closed => return,   // the window has been closed by the user
+                    Event::Closed => return Ok(()),   // the window has been closed by the user
                     Event::MouseMoved(x, y) => self.mouse_moved(x, y),
                     Event::MouseWheel(MouseScrollDelta::LineDelta(_, y), _) => {
                         // self.mouse_wheel_line(y)
@@ -102,4 +108,21 @@ impl Program {
             self.mouse_down = false;
         }
     }
+}
+
+
+/// Prints the error if it is an Error
+pub fn print_err<T>(err: Error) -> T {
+    println!("\n === \nError: {}", err);
+    for e in err.iter().skip(1) {
+        println!("  caused by: {}", e);
+    }
+    println!(" === \n");
+
+    if let Some(backtrace) = err.backtrace() {
+        println!("backtrace: {:?}", backtrace);
+    }
+
+    println!(" === \n");
+    panic!("Exiting");
 }
