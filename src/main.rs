@@ -18,7 +18,7 @@ use vec::Vec2;
 use err::*;
 
 
-const PATH: &'static str = "example.pdf";
+const PATH: &'static str = "la.pdf";
 
 // TODO NOW
 // We need to be able to read stream (with graphics & text) before anything.

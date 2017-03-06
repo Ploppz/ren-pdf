@@ -51,7 +51,7 @@ impl<'a, 'b> PdfRenderer<'a, 'b> {
         for op in content.operations {
             println!("Op {}", op);
             if op.operator == "TJ" {
-                let operands = op.operands[0].borrow_array()?;
+                let operands = op.operands[0].as_array()?;
                 for obj in operands {
                     match obj {
                         &file::Object::String (ref s) => {
@@ -75,7 +75,13 @@ impl<'a, 'b> PdfRenderer<'a, 'b> {
 
     pub fn get_page_content(&mut self, page_nr: i32) -> Result<pdf::Content> {
         let page = self.doc.get_page(page_nr)?;
-        let content = page.get("Contents")?.as_stream()?;
+        let content = page.get("Contents")?; // TODO why we have to use a let binding here?
+        let content = match *content.inner() {
+            file::Object::Stream (_) => content.as_stream()?,
+            file::Object::Array (_) => content.as_array()?.get(0).as_stream()?,
+            _ => bail!("Contents neither Stream nor Array."),
+        };
+
         let content = Content::parse_from(&content.content).chain_err(|| "Parsing contents.")?;
         Ok(content)
     }
